@@ -60,13 +60,13 @@ label.lbl{display:block;font-weight:600;margin:.7rem 0 .3rem;font-size:.92rem}
 input,select,textarea{width:100%;font:inherit;padding:.6rem .8rem;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--bg);color:var(--text)}
 input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
 .row{display:flex;gap:.6rem;flex-wrap:wrap}
-.row>*{flex:1 1 140px}
+.row>*{flex:1 1 140px;min-width:0}
 .rule{border:1px solid var(--border);border-radius:var(--r-md);padding:.7rem .9rem;margin:.5rem 0;display:flex;align-items:center;gap:.7rem;background:var(--surface)}
 .rule.active{border-color:var(--danger);background:var(--danger-soft)}
 .rule .meta{flex:1}.rule .meta b{display:block}.rule .meta span{color:var(--muted);font-size:.85rem}
 .icon-btn{border:1px solid var(--border);background:var(--card);border-radius:10px;padding:.4rem .6rem;cursor:pointer;font:inherit}
 .icon-btn:hover{border-color:var(--danger);color:var(--danger)}
-.kbd{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0 .45rem;font-size:.85em}
+.kbd{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0 .45rem;font-size:.85em;display:inline-block;max-width:100%;overflow-wrap:anywhere}
 .steps{margin:.5rem 0;padding-inline-start:1.2rem}.steps li{margin:.45rem 0}
 .timer-big{font-size:var(--fs-3xl);font-weight:800;text-align:center;letter-spacing:.02em;margin:.6rem 0}
 .progress{height:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-full);overflow:hidden}
@@ -173,13 +173,18 @@ canvas.chart{height:auto} /* يحافظ على نسبة الرسم */
   .hero{padding:1.1rem}
   .hero h1{font-size:1.45rem}
   .card h2{font-size:1.15rem}
-  .topbar-inner{padding:.55rem .7rem;gap:.5rem}
-  .brand{font-size:.92rem}
-  .brand-mark{width:32px;height:32px;font-size:1.1rem;border-radius:10px}
-  .brand small{font-size:.68rem}
-  .top-actions{gap:.35rem}
-  .top-actions .btn{padding:.45rem .7rem;font-size:.82rem;min-height:40px}
-  #sosBtn{font-size:.82rem}
+  .topbar-inner{padding:.55rem .7rem;gap:.5rem;flex-wrap:wrap}
+  .brand{font-size:.92rem;min-width:0}
+  .brand-mark{width:32px;height:32px;font-size:1.1rem;border-radius:10px;flex:none}
+  .brand small{display:none}
+  .top-actions{gap:.35rem;margin-inline-start:auto}
+  .top-actions .btn{padding:.45rem .6rem;font-size:.82rem;min-height:40px}
+  #sosBtn .bl,#installBtn .bl{display:none}
+  #sosBtn,#installBtn{font-size:1rem}
+  .card{overflow-wrap:break-word}
+  .quick .btn{flex:1 1 100%}
+  #focusOverlay,#sosOverlay{padding:1rem}
+  #onboard .sheet{max-height:calc(100dvh - 2rem);overflow-y:auto}
   .ring-card{flex-direction:column;text-align:center}
   .ring{width:150px;height:150px}
   .quick .btn{min-height:48px}
@@ -191,8 +196,9 @@ canvas.chart{height:auto} /* يحافظ على نسبة الرسم */
   .mood-row button{min-height:52px}
   #tasbihTap{min-height:60px}
   .stat-grid{grid-template-columns:repeat(2,1fr)}
-  .tabbar-inner{grid-template-columns:repeat(6,1fr);padding:.3rem .3rem calc(.3rem + env(safe-area-inset-bottom))}
-  .tabbar a{font-size:.6rem;padding:.35rem .1rem}
+  .tabbar-inner{display:flex;overflow-x:auto;padding:.3rem .4rem calc(.3rem + env(safe-area-inset-bottom));scroll-snap-type:x mandatory;scrollbar-width:none}
+  .tabbar-inner::-webkit-scrollbar{display:none}
+  .tabbar a{font-size:.62rem;padding:.35rem .2rem;min-width:78px;flex:1 0 auto;scroll-snap-align:start}
   .tabbar span.i{font-size:1.1rem}
   .pin-pad,#moodRow,#tasbihTap{user-select:none;-webkit-user-select:none}
   .ob-step h2{font-size:1.25rem}

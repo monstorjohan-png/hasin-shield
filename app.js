@@ -94,7 +94,7 @@ if(!store.get("profile_done",false)){$("onboard").classList.add("open")}
 $("obGo2").onclick=function(){if(!$("obName").value.trim()){toast("اكتب اسمك أولا");return}showOb("ob2")};
 $("obBack1").onclick=function(){showOb("ob1")};
 $("obGo3").onclick=function(){showOb("ob3")};
-$("obSkip").onclick=function(){store.set("profile_done",true);$("onboard").classList.remove("open")};
+$("obSkip").onclick=function(){store.set("profile_done",true);$("onboard").classList.remove("open");$("lockScreen").classList.remove("open")};
 $("obFinish").onclick=function(){
   store.set("name",$("obName").value.trim()||"صديقي");store.set("goal",$("obGoal").value);
   store.set("danger0",$("obTrig").value);log("⚠️ أخطر محفز: "+$("obTrig").value);
@@ -103,7 +103,7 @@ $("obFinish").onclick=function(){
   if(!r.length){r.push({name:"📵 الهاتف ليلا (وقت الخطر)",from:bed,to:"06:00",days:"daily"});store.set("rules",r)}
   var pin=$("obPin").value.trim();
   if(/^\d{4}$/.test(pin)){store.set("pin",hash(pin));pinHash=store.get("pin")}
-  store.set("profile_done",true);$("onboard").classList.remove("open");
+  store.set("profile_done",true);$("onboard").classList.remove("open");$("lockScreen").classList.remove("open");
   renderHead();renderRules();addXP(20);log("🚀 اكتملت البداية: "+store.get("name"));
   toast("أهلا "+store.get("name")+"! حصنك جاهز 🛡️");celebrate()};
 $("saveName").onclick=function(){var v=$("setName").value.trim();if(!v)return;store.set("name",v);renderHead();toast("حُفظ الاسم ✅")};
@@ -113,9 +113,8 @@ $("setName").value=store.get("name","");
 function hash(s){var h=5381;for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return "h"+h}
 var pinHash=store.get("pin",null),pinBuf="";
 function paintPin(){var d=$("pinDots").querySelectorAll("i");for(var i=0;i<4;i++)d[i].className=i<pinBuf.length?"f":""}
-if(pinHash){$("lockScreen").classList.add("open");$("firstPinBox").hidden=true}
-else if(!store.get("profile_done",false)){$("lockScreen").classList.remove("open")}
-else{$("lockScreen").classList.add("open");$("firstPinBox").hidden=false;$("pinPad").style.display="none"}
+if(pinHash){$("lockScreen").classList.add("open");$("firstPinBox").hidden=true;$("pinPad").style.display="grid"}
+else{$("lockScreen").classList.remove("open")}
 $("pinPad").addEventListener("click",function(e){
   var b=e.target.closest("button");if(!b||!$("lockScreen").classList.contains("open"))return;
   if(!$("firstPinBox").hidden)return;
