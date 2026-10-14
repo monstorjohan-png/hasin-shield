@@ -7,7 +7,7 @@ var store={
   set:function(k,v){try{localStorage.setItem("hasin_"+k,JSON.stringify(v))}catch(e){}},
   del:function(k){try{localStorage.removeItem("hasin_"+k)}catch(e){}}
 };
-$("ver").textContent="v3.1 • offline-first";
+$("ver").textContent="v3.2 • offline-first";
 /* التاريخ بتوقيت جهازك المحلي (لا UTC) حتى لا تنكسر السلسلة بعد منتصف الليل */
 function dayK(d){d=d||new Date();var m=String(d.getMonth()+1),dd=String(d.getDate());
   return d.getFullYear()+"-"+(m.length<2?"0"+m:m)+"-"+(dd.length<2?"0"+dd:dd)}
@@ -31,14 +31,53 @@ function melody(kind){if(!soundOn())return;
   else if(kind==="alarm"){tone(440,0,.2,"triangle");tone(440,.3,.2,"triangle")}}
 ["pointerdown","keydown","touchstart"].forEach(function(ev){addEventListener(ev,function(){ensureAC()},{once:true,passive:true})});
 function paintSound(){$("toggleSound").textContent=soundOn()?"🔔 صوت: يعمل":"🔕 صوت: متوقف"}
-$("toggleSound").onclick=function(){store.set("sound",!soundOn());paintSound();if(soundOn())melody("tick");else toast("🔕 الصوت متوقف")};
+$("toggleSound").onclick=function(){store.set("sound",!soundOn());paintSound();if(soundOn())melody("tick");else{ambStop();toast("🔕 الصوت متوقف")}};
 paintSound();
 if($("sndTest"))$("sndTest").onclick=function(){melody("win");vib(60);toast(soundOn()?"🔊 الصوت يعمل":"🔕 فعّل الصوت أولا")};
+
+/* أصوات الجلسات: هدوء (وسادة صوتية) • تأمل (رنين) • تركيز (ضجيج وردي) — WebAudio دون ملفات */
+var ambNodes=null,ambTimer=null;
+function ambStop(){try{if(ambTimer){clearInterval(ambTimer);ambTimer=null}}catch(e){}
+  try{if(ambNodes){ambNodes.forEach(function(n){try{if(n.stop)n.stop()}catch(e){}try{if(n.disconnect)n.disconnect()}catch(e){}});ambNodes=null}}catch(e){}}
+function noiseBuffer(ac){var len=ac.sampleRate*2,buf=ac.createBuffer(1,len,ac.sampleRate),ch=buf.getChannelData(0),last=0;
+  for(var i=0;i<len;i++){var w=Math.random()*2-1;last=(last+0.02*w)/1.02;ch[i]=last*3.2}return buf}
+function ambStart(kind){ambStop();if(!soundOn()||!kind||kind==="off")return;
+  try{var ac=ensureAC();if(!ac||ac.state!=="running")return;
+    var vol=+store.get("ambVol",40)/100;
+    var master=ac.createGain();master.gain.value=0.0001;master.connect(ac.destination);
+    master.gain.exponentialRampToValueAtTime(Math.max(0.001,vol*0.5),ac.currentTime+2);
+    var nodes=[master];
+    if(kind==="calm"){var lp=ac.createBiquadFilter();lp.type="lowpass";lp.frequency.value=600;lp.connect(master);nodes.push(lp);
+      [[110,"sine",0.16],[164.81,"sine",0.16],[220,"triangle",0.06],[277.18,"triangle",0.05]].forEach(function(cfg,i){
+        var o=ac.createOscillator();o.type=cfg[1];o.frequency.value=cfg[0];
+        var g=ac.createGain();g.gain.value=cfg[2];o.connect(g);g.connect(lp);o.start();nodes.push(o,g);
+        var lfo=ac.createOscillator();lfo.frequency.value=0.06+i*0.025;
+        var lg=ac.createGain();lg.gain.value=0.045;lfo.connect(lg);lg.connect(g.gain);lfo.start();nodes.push(lfo,lg)});}
+    else if(kind==="medit"){var bowl=function(){try{var t=ac.currentTime;
+        [[432,0.22],[648.5,0.1],[865.3,0.07]].forEach(function(cfg){
+          var o=ac.createOscillator();o.type="sine";o.frequency.value=cfg[0];
+          var g=ac.createGain();g.gain.setValueAtTime(0.0001,t);
+          g.gain.exponentialRampToValueAtTime(cfg[1]*vol+0.001,t+0.05);
+          g.gain.exponentialRampToValueAtTime(0.0001,t+6);
+          o.connect(g);g.connect(master);o.start(t);o.stop(t+6.2)})}catch(e){}};
+      bowl();ambTimer=setInterval(bowl,7000);}
+    else if(kind==="focus"){var src=ac.createBufferSource();src.buffer=noiseBuffer(ac);src.loop=true;
+      var f=ac.createBiquadFilter();f.type="lowpass";f.frequency.value=420;
+      var g2=ac.createGain();g2.gain.value=0.5;src.connect(f);f.connect(g2);g2.connect(master);src.start();nodes.push(src,f,g2);
+      var o2=ac.createOscillator();o2.type="sine";o2.frequency.value=54;
+      var g3=ac.createGain();g3.gain.value=0.05;o2.connect(g3);g3.connect(master);o2.start();nodes.push(o2,g3);}
+    ambNodes=nodes;store.set("amb",kind)}catch(e){}}
+if($("ambSel")){$("ambSel").value=store.get("amb","off");
+  $("ambSel").onchange=function(){store.set("amb",$("ambSel").value);
+    if($("focusOverlay").classList.contains("open"))ambStart($("ambSel").value);else toast("🔊 حُفظ صوت الجلسات")}}
+if($("ambVol")){$("ambVol").value=store.get("ambVol",40);
+  $("ambVol").oninput=function(){store.set("ambVol",+$("ambVol").value);
+    if($("focusOverlay").classList.contains("open"))ambStart(store.get("amb","off"))}}
 
 /* تنبيه + احتفال */
 var toastT=null;
 function toast(m){$("toastText").textContent=m;$("toast").classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){$("toast").classList.remove("show")},2600)}
-function celebrate(){melody("win");
+function celebrate(){melody("win");try{
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   var c=$("confetti"),x=c.getContext("2d");c.style.display="block";c.width=innerWidth;c.height=innerHeight;
   var ps=[],cols=["#0E7C6B","#2dd4a8","#5b5bd6","#e8b45a","#c0392b"];
@@ -46,14 +85,15 @@ function celebrate(){melody("win");
   var t0=Date.now();
   (function f(){var t=Date.now()-t0;x.clearRect(0,0,c.width,c.height);
     ps.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.col;x.fillRect(-p.w/2,-p.h/2,p.w,p.h);x.restore()});
-    if(t<2400)requestAnimationFrame(f);else c.style.display="none"})()}
+    if(t<2400)requestAnimationFrame(f);else c.style.display="none"})()}catch(e){}}
 
 /* آيات */
 var VERSES=["﴿قُل لِّلْمُؤْمِنِينَ يَغُضُّوا مِنْ أَبْصَارِهِمْ وَيَحْفَظُوا فُرُوجَهُمْ ۚ ذَٰلِكَ أَزْكَىٰ لَهُمْ﴾ — النور 30","﴿وَلَا تَقْرَبُوا الزِّنَا ۖ إِنَّهُ كَانَ فَاحِشَةً وَسَاءَ سَبِيلًا﴾ — الإسراء 32","﴿وَالَّذِينَ جَاهَدُوا فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا﴾ — العنكبوت 69","﴿إِنَّ اللَّهَ يُحِبُّ التَّوَّابِينَ وَيَحِبُّ الْمُتَطَهِّرِينَ﴾ — البقرة 222","«ومن لم يستطع فعليه بالصوم فإنه له وجاء» — متفق عليه","«احفظ الله يحفظك» — الترمذي"];
 $("verseText").textContent=VERSES[new Date().getDate()%VERSES.length];
 
 /* المظهر */
-function applyTheme(t){document.documentElement.dataset.theme=t;$("themeBtn").textContent=t==="dark"?"☀️":"🌙";store.set("theme",t)}
+function applyTheme(t){document.documentElement.dataset.theme=t;$("themeBtn").textContent=t==="dark"?"☀️":"🌙";store.set("theme",t);
+try{var mt=document.querySelector('meta[name="theme-color"]');if(mt)mt.setAttribute("content",t==="dark"?"#0b0e0c":"#0E7C6B")}catch(e){}}
 function autoTheme(){var h=new Date().getHours();applyTheme((h>=19||h<6)?"dark":"light")}
 if(store.get("themeAuto",true)===false)applyTheme(store.get("theme","light"));else autoTheme();
 $("themeBtn").onclick=function(){store.set("themeAuto",false);applyTheme(document.documentElement.dataset.theme==="dark"?"light":"dark")};
@@ -128,8 +168,7 @@ $("obFinish").onclick=function(){
   store.set("name",$("obName").value.trim()||"صديقي");store.set("goal",$("obGoal").value);
   store.set("danger0",$("obTrig").value);log("⚠️ أخطر محفز: "+$("obTrig").value);
   var bed=$("obBed").value||"23:00";
-  var r=store.get("rules",[]);
-  if(!r.length){r.push({name:"📵 الهاتف ليلا (وقت الخطر)",from:bed,to:"06:00",days:"daily"});store.set("rules",r)}
+  if(!rules.length){rules.push({name:"📵 الهاتف ليلا (وقت الخطر)",from:bed,to:"06:00",days:"daily"});store.set("rules",rules)}
   var pin=$("obPin").value.trim();
   if(/^\d{4}$/.test(pin)){store.set("pin",hash(pin));pinHash=store.get("pin")}
   store.set("profile_done",true);$("onboard").classList.remove("open");$("lockScreen").classList.remove("open");
@@ -209,17 +248,17 @@ $("startFocus").onclick=function(){var m=Math.max(1,Math.min(480,+($("focusMin")
   fTotal=m*60;fEnd=Date.now()+fTotal*1000;$("focusOverlay").classList.add("open");
   $("focusMsg").textContent="مقفل "+m+" دقيقة — الخروج يُسجل.";
   try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}catch(e){}
-  log("🔒 تركيز "+m+"د");clearInterval(fInt);
+  log("🔒 تركيز "+m+"د");ambStart(store.get("amb","off"));clearInterval(fInt);
   fInt=setInterval(function(){var left=Math.max(0,Math.round((fEnd-Date.now())/1000));
     $("focusTimer").textContent=String(Math.floor(left/60)).padStart(2,"0")+":"+String(left%60).padStart(2,"0");
     var p=((1-left/fTotal)*100)+"%";$("focusBar").style.width=p;$("dayProgress").style.width=p;
-    if(left<=0){clearInterval(fInt);$("focusOverlay").classList.remove("open");
+    if(left<=0){clearInterval(fInt);ambStop();$("focusOverlay").classList.remove("open");
       try{document.exitFullscreen&&document.exitFullscreen()}catch(e){}
       store.set("focusMin",store.get("focusMin",0)+m);focusStats();
       var g=award("focus",Math.min(m,90),6);log("✅ تركيز "+m+"د");celebrate();
       toast(g>0?("اكتمل التركيز +"+g+" XP"):"اكتمل التركيز ✅");checkBadges()}},500)};
 $("exitFocus").onclick=function(){var bc=store.get("breaks",0)+1;store.set("breaks",bc);focusStats();
-  clearInterval(fInt);$("focusOverlay").classList.remove("open");
+  clearInterval(fInt);ambStop();$("focusOverlay").classList.remove("open");
   try{document.exitFullscreen&&document.exitFullscreen()}catch(e){}
   log("⚠️ كُسر التركيز #"+bc);vib(150)};
 $("quickFocus").onclick=function(){$("focusMin").value=25;$("focusMin").oninput();document.getElementById("focus").scrollIntoView({behavior:"smooth"});setTimeout(function(){$("startFocus").click()},600)};
@@ -268,7 +307,8 @@ function doClean(){var k=dayK(),a=store.get("streak",[]);
   else toast("مسجل مسبقا ✅");
   renderStreak();drawReport();checkBadges()}
 $("markClean").onclick=doClean;$("quickClean").onclick=doClean;
-$("markBad").onclick=function(){if(!confirm("تسجيل صادق؟ لا جلد للذات — نتعلم وننهض."))return;
+$("markBad").onclick=function(){var ok=true;try{ok=confirm("تسجيل صادق؟ لا جلد للذات — نتعلم وننهض.")}catch(e){}
+ if(!ok)return;
   var k=dayK(),b=store.get("bad",[]);if(b.indexOf(k)<0){b.push(k);store.set("bad",b)}
   store.set("streak",[]);log("📝 تعثر — بدء جديد");renderStreak();drawReport();
   alert("﴿إِنَّ اللَّهَ يُحِبُّ التَّوَّابِينَ﴾ — توضأ وصلِّ ركعتين 💚")};
@@ -288,7 +328,7 @@ function renderChal(){var ch=store.get("chal",null),s=streakNow();
   var p=Math.min(100,Math.round(s/ch.len*100));$("challengeBar").style.width=p+"%";
   $("challengeText").textContent="تحدي "+ch.len+" يوما: "+s+"/"+ch.len+" ("+p+"%)"+(s>=ch.len?" — أتممته 👑 أسطورة!":"");
   if(s>=ch.len&&!ch.done){ch.done=true;store.set("chal",ch);addXP(200);celebrate();log("👑 أُتم تحدي "+ch.len)}}
-$("startChallenge").onclick=function(){var len=+($("challengeSel").value);
+$("startChallenge").onclick=function(){var len=Math.max(1,+($("challengeSel").value)||7);
   store.set("chal",{len:len,start:dayK()});renderChal();log("⚔️ بدأ تحدي "+len);toast("بدأ التحدي! بالتوفيق ⚔️");checkBadges()};
 renderChal();
 
@@ -371,8 +411,19 @@ function drawReport(){var days=store.get("streak",[]),bad=store.get("bad",[]);
   var falls=store.get("trigs",[]).filter(function(x){return x.r===0}).length;
   $("reportText").textContent="30 يوما: "+clean+" نظيفا • "+store.get("focusMin",0)+"د تركيز • "+falls+" سقوطا. "+(clean>=20?"ممتاز — ثبّت روتينك.":clean>=10?"تقدم حقيقي — احمِ أخطر ساعة.":"ابدأ بعادة واحدة: النوم المبكر.")}
 drawReport();
+/* نسخ متين يعمل على كل المتصفحات */
+function copyText(t,msg){msg=msg||"نُسخ ✅";
+  function done(){toast(msg)}
+  try{if(typeof navigator!=="undefined"&&navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done,function(){fallback()});return}}catch(e){}
+  fallback();
+  function fallback(){try{var ta=document.createElement("textarea");ta.value=t;
+    ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();
+    var ok=false;try{ok=document.execCommand?document.execCommand("copy"):false}catch(e){}
+    document.body.removeChild(ta);if(ok){done();return}}catch(e){}
+    try{if(window.prompt){window.prompt("انسخ:",t);return}}catch(e2){}toast("تعذر النسخ")}}
 $("copyReport").onclick=function(){var t="تقريري (حصن): نظافة "+$("stClean").textContent+" • تركيز "+$("stFocus").textContent+"د • أطول سلسلة "+$("stBest").textContent+" • مستوى "+$("levelName").textContent+" ("+store.get("xp",0)+" XP). "+$("reportText").textContent;
-  try{navigator.clipboard.writeText(t);toast("نُسخ ✅")}catch(e){prompt("انسخه:",t)}};
+  copyText(t,"نُسخ التقرير ✅")};
 $("dlBackup").onclick=function(){var data={};for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf("hasin_")===0)data[k]=localStorage.getItem(k)}
   var b=new Blob([JSON.stringify(data)],{type:"application/json"});var a=document.createElement("a");
   a.href=URL.createObjectURL(b);a.download="hasin-backup-"+dayK()+".json";a.click();log("💾 نسخة احتياطية")};
@@ -397,11 +448,26 @@ $("sosWin").onclick=function(){$("sosOverlay").classList.remove("open");clearInt
   toast(g>0?"بطل! +30 XP 🏆":"بطل! نجوت 🏆");checkBadges()};
 
 /* مسح + تصدير */
-$("wipeAll").onclick=function(){if(prompt("للمسح اكتب: مسح")!=="مسح"){toast("أُلغي");return}
+$("wipeAll").onclick=function(){var c=null;try{c=prompt("للمسح الكامل اكتب: مسح")}catch(e){toast("غير مدعوم هنا");return}
+ if(c!=="مسح"){toast("أُلغي");return}
   Object.keys(localStorage).filter(function(k){return k.indexOf("hasin_")===0}).forEach(function(k){localStorage.removeItem(k)});
   alert("مُسح كل شيء.");location.reload()};
 $("exportLog").onclick=function(){var t=store.get("log",[]).join("\n")||"لا سجل";
-  try{navigator.clipboard.writeText("سجل التزامي (حصن):\n"+t);toast("نُسخ ✅")}catch(e){prompt("انسخه:",t)}};
+  copyText("سجل التزامي (حصن):\n"+t,"نُسخ السجل ✅")};
 
+/* تتبع القسم الحالي + زر الصعود + إخفاء بطاقة التثبيت داخل التطبيق */
+try{if(typeof IntersectionObserver!=="undefined"){
+  var spy=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){
+    document.querySelectorAll(".tabbar a").forEach(function(a){
+      a.classList.toggle("active",a.getAttribute("href")==="#"+en.target.id)})}})},{rootMargin:"-40% 0px -55% 0px"});
+  ["day","focus","safe","triggers","report","settings"].forEach(function(id){
+    var s=document.getElementById(id);if(s)spy.observe(s)})}}catch(e){}
+try{if(typeof matchMedia!=="undefined"&&matchMedia("(display-mode: standalone)").matches){
+  document.body.classList.add("installed");var ic=$("installCard");if(ic)ic.style.display="none"}}catch(e){}
+try{addEventListener("scroll",function(){var y=0;
+  try{y=window.scrollY||window.pageYOffset||0}catch(e){}
+  $("toTop").classList.toggle("show",y>600)},{passive:true})}catch(e){}
+if($("toTop"))$("toTop").onclick=function(){try{window.scrollTo({top:0,behavior:"smooth"})}catch(e){try{window.scrollTo(0,0)}catch(e2){}}};
+try{window.__hasin={store:store,scan:scan,isActive:isActive,streakNow:streakNow,award:award,levelOf:levelOf,dayK:dayK,saveT:saveT,ambStart:ambStart,ambStop:ambStop,VERSION:"3.2"}}catch(e){}
 renderLog();renderLevel();renderBadges();checkBadges();
 })();

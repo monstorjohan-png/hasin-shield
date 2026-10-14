@@ -148,6 +148,10 @@
     <section class="card" id="focus" aria-labelledby="h-focus">
       <h2 id="h-focus">🔒 التركيز</h2>
       <div class="preset-row"><button class="btn" data-preset="25">🍅 25</button><button class="btn" data-preset="50">📚 50</button><button class="btn" data-preset="90">🎯 90</button><button class="btn" data-preset="480">🌙 نوم</button></div>
+      <div class="row">
+        <div><label class="lbl" for="ambSel">🎧 صوت الجلسة (دون إنترنت)</label><select id="ambSel"><option value="off">🔇 صمت</option><option value="calm">🌊 هدوء</option><option value="medit">🧘 تأمل</option><option value="focus">🎯 تركيز عميق</option></select></div>
+        <div><label class="lbl" for="ambVol">مستوى الصوت</label><input type="range" id="ambVol" min="0" max="100" value="40"></div>
+      </div>
       <div class="row"><div><label class="lbl" for="focusMin">المدة (دقيقة)</label><input id="focusMin" type="number" min="1" max="480" value="25"></div>
       <div><label class="lbl" for="lockPass">كلمة فك مبكر</label><input id="lockPass" type="password" placeholder="اختياري" autocomplete="off"></div></div>
       <div style="margin-top:.8rem"><button class="btn btn-primary" id="startFocus">▶️ بدء القفل</button></div>
@@ -228,6 +232,7 @@
   <p class="desc">اسحب <span class="kbd" dir="ltr">hasin-shield</span> إلى Netlify Drop / Cloudflare Pages / Vercel → رابط <span class="kbd" dir="ltr">https://…</span> دائم.</p></section>
 </main>
 
+<button id="toTop" aria-label="العودة للأعلى">↑</button>
 <nav class="tabbar"><div class="tabbar-inner">
   <a href="#day"><span class="i">📓</span>يومي</a><a href="#focus"><span class="i">🔒</span>تركيز</a><a href="#safe"><span class="i">🧭</span>فحص</a><a href="#triggers"><span class="i">🔥</span>محفزات</a><a href="#report"><span class="i">📊</span>تقرير</a><a href="#settings"><span class="i">⚙️</span>إعدادات</a>
 </div></nav>

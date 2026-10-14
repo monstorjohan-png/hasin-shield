@@ -208,3 +208,35 @@ canvas.chart{height:auto} /* يحافظ على نسبة الرسم */
   .ob-step h2{font-size:1.25rem}
   #onboard .sheet{padding:1.2rem}
 }
+/* زر الصعود + منزلق الصوت */
+#toTop{position:fixed;bottom:calc(72px + env(safe-area-inset-bottom));inset-inline-end:14px;z-index:70;
+  width:46px;height:46px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);
+  font-size:1.3rem;cursor:pointer;box-shadow:var(--shadow-md);opacity:0;pointer-events:none;transition:opacity .3s var(--ease)}
+#toTop.show{opacity:1;pointer-events:auto}
+input[type="range"]{padding:0;accent-color:var(--accent);cursor:pointer}
+/* هواتف مدمجة ≤380px: إيقاع أضيق */
+@media(max-width:380px){
+  .hero h1{font-size:1.3rem}
+  .hero{padding:.95rem}
+  .card{padding:.95rem}
+  .ring{width:128px;height:128px}
+  .tabbar a{min-width:70px;font-size:.58rem}
+  .top-actions .btn{min-height:38px;padding:.4rem .5rem}
+  .stat b{font-size:1.1rem}
+  .timer-big{font-size:1.9rem}
+}
+/* لوحي 641–1024px: تنفس أوسع */
+@media(min-width:641px) and (max-width:1024px){
+  main{padding:1.4rem 1.4rem 7rem}
+  .hero h1{font-size:2.2rem}
+  .hero{padding:2rem}
+  .tabbar-inner{max-width:720px}
+}
+/* شاشات كبيرة ≥1025px: شبكة أوسع */
+@media(min-width:1025px){
+  .stat-grid{grid-template-columns:repeat(4,1fr)}
+  .card{padding:1.5rem}
+  .dash{grid-template-columns:320px 1fr}
+}
+/* داخل التطبيق المثبت: بلا بطاقة تثبيت */
+body.installed .install-card{display:none}
