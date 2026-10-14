@@ -16,7 +16,14 @@ function vib(p){if(store.get("vib",true)===false)return;if("vibrate" in navigato
 /* محرك الصوت: يعمل بعد أول لمسة (شرط المتصفح)، نغمات مميزة، زر تجربة */
 var AC=null;
 function ensureAC(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume()}catch(e){}return AC}
-function tone(f,t0,dur,type){try{var ac=ensureAC();if(!ac||ac.state!=="running")return;
+function tone(f,t0,dur,type,att){if(!soundOn())return;att=att||0;
+  var ac=null;try{ac=ensureAC()}catch(e){return}
+  if(!ac)return;
+  if(ac.state!=="running"){ /* السياق معلق (أول لمسة) — استأنف ثم أعد المحاولة */
+    if(att<2){try{var pr=ac.resume();
+      if(pr&&pr.then){pr.then(function(){tone(f,t0,dur,type,att+1)});return}}catch(e){}
+      setTimeout(function(){tone(f,0,dur,type,att+1)},350)}return}
+  try{
   var o=ac.createOscillator(),g=ac.createGain();o.type=type||"sine";o.frequency.value=f;
   var t=ac.currentTime+(t0||0);g.gain.setValueAtTime(0.0001,t);
   g.gain.exponentialRampToValueAtTime(0.08,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
@@ -41,8 +48,11 @@ function ambStop(){try{if(ambTimer){clearInterval(ambTimer);ambTimer=null}}catch
   try{if(ambNodes){ambNodes.forEach(function(n){try{if(n.stop)n.stop()}catch(e){}try{if(n.disconnect)n.disconnect()}catch(e){}});ambNodes=null}}catch(e){}}
 function noiseBuffer(ac){var len=ac.sampleRate*2,buf=ac.createBuffer(1,len,ac.sampleRate),ch=buf.getChannelData(0),last=0;
   for(var i=0;i<len;i++){var w=Math.random()*2-1;last=(last+0.02*w)/1.02;ch[i]=last*3.2}return buf}
-function ambStart(kind){ambStop();if(!soundOn()||!kind||kind==="off")return;
-  try{var ac=ensureAC();if(!ac||ac.state!=="running")return;
+function ambStart(kind,att){ambStop();if(!soundOn()||!kind||kind==="off")return;att=att||0;
+  try{var ac=ensureAC();if(!ac)return;
+    if(ac.state!=="running"){if(att<1){try{var pr=ac.resume();
+        if(pr&&pr.then)pr.then(function(){ambStart(kind,1)})}catch(e){}
+        setTimeout(function(){try{var a2=ensureAC();if(a2&&a2.state==="running")ambStart(kind,1)}catch(e2){}},450)}return}
     var vol=+store.get("ambVol",40)/100;
     var master=ac.createGain();master.gain.value=0.0001;master.connect(ac.destination);
     master.gain.exponentialRampToValueAtTime(Math.max(0.001,vol*0.5),ac.currentTime+2);
@@ -77,7 +87,8 @@ if($("ambVol")){$("ambVol").value=store.get("ambVol",40);
 /* تنبيه + احتفال */
 var toastT=null;
 function toast(m){$("toastText").textContent=m;$("toast").classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){$("toast").classList.remove("show")},2600)}
-function celebrate(){melody("win");try{
+var lastCeleb=0;
+function celebrate(){melody("win");lastCeleb=Date.now();try{
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   var c=$("confetti"),x=c.getContext("2d");c.style.display="block";c.width=innerWidth;c.height=innerHeight;
   var ps=[],cols=["#0E7C6B","#2dd4a8","#5b5bd6","#e8b45a","#c0392b"];
@@ -145,7 +156,7 @@ function checkBadges(){if(BADGE_BUSY)return;BADGE_BUSY=true;
     BADGES.forEach(function(b){try{if(won.indexOf(b.id)<0&&b.c()){won.push(b.id);fresh.push(b)}}catch(e){}});
     if(fresh.length){store.set("badgesWon",won);
       fresh.forEach(function(b){toast("🏅 شارة جديدة: "+b.t);addXP(25)});
-      melody("badge")}
+      if(Date.now()-lastCeleb>1500)melody("badge")}
     renderBadges();renderLevel()}finally{BADGE_BUSY=false}}
 function renderBadges(){var won=store.get("badgesWon",[]),box=$("badgeRow");box.innerHTML="";
   BADGES.forEach(function(b){var s=document.createElement("span");s.className="bdg"+(won.indexOf(b.id)>-1?" won":"");s.textContent=b.t;box.appendChild(s)})}
@@ -180,7 +191,7 @@ $("setName").value=store.get("name","");
 /* قفل PIN (يظهر فقط عند وجود رمز) */
 function hash(s){var h=5381;for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return "h"+h}
 var pinHash=store.get("pin",null),pinBuf="";
-function paintPin(){var d=$("pinDots").querySelectorAll("i");for(var i=0;i<4;i++)d[i].className=i<pinBuf.length?"f":""}
+function paintPin(){try{var d=$("pinDots").querySelectorAll("i");for(var i=0;i<4&&i<d.length;i++)d[i].className=i<pinBuf.length?"f":""}catch(e){}}
 if(pinHash){$("lockScreen").classList.add("open");$("firstPinBox").hidden=true;$("pinPad").style.display="grid"}
 else{$("lockScreen").classList.remove("open")}
 $("pinPad").addEventListener("click",function(e){
@@ -257,7 +268,10 @@ $("startFocus").onclick=function(){var m=Math.max(1,Math.min(480,+($("focusMin")
       store.set("focusMin",store.get("focusMin",0)+m);focusStats();
       var g=award("focus",Math.min(m,90),6);log("✅ تركيز "+m+"د");celebrate();
       toast(g>0?("اكتمل التركيز +"+g+" XP"):"اكتمل التركيز ✅");checkBadges()}},500)};
-$("exitFocus").onclick=function(){var bc=store.get("breaks",0)+1;store.set("breaks",bc);focusStats();
+$("exitFocus").onclick=function(){var lp=$("lockPass").value||"";
+  if(lp){var p=null;try{p=prompt("كلمة سر الفك المبكر (من شخص ثقة):")}catch(e){toast("تعذر التحقق");return}
+    if(p!==lp){toast("كلمة خاطئة — استمر 💪");melody("bad");return}}
+  var bc=store.get("breaks",0)+1;store.set("breaks",bc);focusStats();
   clearInterval(fInt);ambStop();$("focusOverlay").classList.remove("open");
   try{document.exitFullscreen&&document.exitFullscreen()}catch(e){}
   log("⚠️ كُسر التركيز #"+bc);vib(150)};
@@ -427,7 +441,7 @@ $("copyReport").onclick=function(){var t="تقريري (حصن): نظافة "+$(
 $("dlBackup").onclick=function(){var data={};for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf("hasin_")===0)data[k]=localStorage.getItem(k)}
   var b=new Blob([JSON.stringify(data)],{type:"application/json"});var a=document.createElement("a");
   a.href=URL.createObjectURL(b);a.download="hasin-backup-"+dayK()+".json";a.click();log("💾 نسخة احتياطية")};
-$("upBackup").onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();
+$("upBackup").onchange=function(e){e=e||{};var t=e.target||{};var f=(t.files||[])[0];if(!f)return;var r=new FileReader();
   r.onload=function(){try{var d=JSON.parse(r.result);Object.keys(d).forEach(function(k){localStorage.setItem(k,d[k])});alert("استُعيدت — سيُعاد التحميل");location.reload()}catch(err){toast("ملف غير صالح")}};
   r.readAsText(f)};
 
