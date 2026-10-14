@@ -102,6 +102,16 @@
       <h2>⚔️ معركتك اليوم</h2>
       <p class="desc" id="battleLine">سجّل عاداتك، واكتب مزاجك، واختر تحديا — كل فعل يقوّي درعك.</p>
       <div class="badges" id="badgeRow"></div>
+      <details class="points"><summary>⭐ كيف تُحسب النقاط؟</summary>
+      <ul>
+        <li>🌱 يوم نظيف: <b>+50</b> (مرة في اليوم)</li>
+        <li>⭐ كل عادة منجزة: <b>+10</b> (مرة يوميا لكل عادة)</li>
+        <li>🔒 التركيز: <b>+1 لكل دقيقة</b> (بحد 90 للجلسة الواحدة)</li>
+        <li>💪 كل مقاومة رغبة: <b>+30</b> (حتى 5 يوميا)</li>
+        <li>📓 حفظ اليوم: <b>+5</b> • 📿 إتمام المسبحة: <b>+10</b></li>
+        <li>🏅 كل شارة جديدة: <b>+25</b> • 👑 إتمام تحدٍّ: <b>+200</b> • 🚀 البداية: <b>+20</b></li>
+        <li>المستويات: 100 تائب • 300 ثابت • 600 مصابر • 1000 حصين • 2000 قدوة</li>
+      </ul></details>
       <label class="lbl">تحدي الأيام</label>
       <div class="row"><select id="challengeSel" class="inline"><option value="7">⚔️ تحدي 7 أيام</option><option value="30">🛡️ تحدي 30 يوما</option><option value="90">👑 تحدي 90 يوما</option></select>
       <button class="btn" id="startChallenge">بدء التحدي</button></div>
@@ -210,7 +220,7 @@
   <section class="card" id="settings" style="margin-top:1rem"><h2>⚙️ الإعدادات</h2>
     <div class="row"><div><label class="lbl" for="setPin">PIN جديد (فارغ = إلغاء)</label><input id="setPin" inputmode="numeric" maxlength="4" autocomplete="off"></div>
     <div><label class="lbl" for="setName">اسمك</label><input id="setName" autocomplete="off"></div></div>
-    <div class="row" style="margin-top:.6rem"><button class="btn" id="saveSetPin">حفظ PIN</button><button class="btn" id="saveName">حفظ الاسم</button><button class="btn" id="toggleVib">📳 اهتزاز</button><button class="btn" id="toggleSound">🔔 صوت</button><button class="btn" id="autoThemeBtn">🌗 تلقائي</button></div>
+    <div class="row" style="margin-top:.6rem"><button class="btn" id="saveSetPin">حفظ PIN</button><button class="btn" id="saveName">حفظ الاسم</button><button class="btn" id="toggleVib">📳 اهتزاز</button><button class="btn" id="toggleSound">🔔 صوت</button><button class="btn" id="sndTest">🔊 تجربة الصوت</button><button class="btn" id="autoThemeBtn">🌗 تلقائي</button></div>
     <div class="row" style="margin-top:.6rem"><button class="btn btn-danger" id="wipeAll">🗑️ مسح كل بياناتي</button></div>
   </section>
 

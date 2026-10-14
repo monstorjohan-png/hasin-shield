@@ -159,6 +159,10 @@ canvas.chart{width:100%;height:180px;background:var(--surface);border:1px solid 
 #confetti{position:fixed;inset:0;z-index:240;pointer-events:none;display:none}
 .install-card{border:1px dashed var(--accent);background:var(--accent-soft);border-radius:var(--r-lg);padding:1rem 1.2rem;margin-top:1rem}
 select.inline{width:auto;display:inline-block}
+.points{border:1px dashed var(--border);border-radius:var(--r-md);padding:.5rem .9rem;margin:.6rem 0;font-size:.88rem;background:var(--surface)}
+.points summary{cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center}
+.points ul{margin:.4rem 0;padding-inline-start:1.2rem}
+.points li{margin:.25rem 0}
 /* ===== تنسيق الهاتف (375px أولا) ===== */
 html{-webkit-text-size-adjust:100%}
 body{overflow-x:hidden}
