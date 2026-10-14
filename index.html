@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>حصن — درع العفة والتركيز</title>
+<meta name="description" content="تطبيق ضبط ذاتي شخصي عظيم: لوحة قيادة، مستويات، تحديات، طوارئ، عادات، تقارير — دون إنترنت ويثبت كتطبيق.">
+<meta name="theme-color" content="#0E7C6B">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+<div id="onboard" role="dialog" aria-modal="true" aria-label="البداية">
+  <div class="sheet">
+    <div class="ob-step on" id="ob1">
+      <h2>🛡️ أهلا بك في حصن</h2>
+      <p class="desc">دقيقة واحدة نضبط فيها حصنك الشخصي. كل شيء يبقى على جهازك.</p>
+      <label class="lbl" for="obName">اسمك (أو كنيتك)</label>
+      <input id="obName" placeholder="مثال: أبو محمد" autocomplete="off">
+      <label class="lbl" for="obGoal">هدفك الأساسي</label>
+      <select id="obGoal"><option>ترك الإباحية والعادة السرية</option><option>تقليل الهاتف والتركيز</option><option>النوم المبكر والانضباط</option><option>كل ما سبق</option></select>
+      <button class="btn btn-primary" id="obGo2" style="width:100%;justify-content:center;margin-top:1rem">التالي ←</button>
+    </div>
+    <div class="ob-step" id="ob2">
+      <h2>🌙 وقت الخطر عندك؟</h2>
+      <p class="desc">سننشئ أول قاعدة حجب تلقائيا (قابلة للتعديل لاحقا).</p>
+      <label class="lbl" for="obBed">عادة أنام بعد الساعة</label>
+      <input id="obBed" type="time" value="23:00">
+      <label class="lbl" for="obTrig">أخطر محفز عليك</label>
+      <select id="obTrig"><option>مقاطع مقترحة في تيك توك/ريلز</option><option>السهر وحيدا بالهاتف</option><option>الملل والفراغ</option><option>إعلانات/صور عابرة</option></select>
+      <div class="row" style="margin-top:1rem"><button class="btn" id="obBack1">→ رجوع</button><button class="btn btn-primary" id="obGo3">التالي ←</button></div>
+    </div>
+    <div class="ob-step" id="ob3">
+      <h2>🔒 قفل شخصي (اختياري)</h2>
+      <p class="desc">رمز PIN يمنع العبث بالحصن في لحظة ضعف. يُحفظ على جهازك فقط.</p>
+      <label class="lbl" for="obPin">رمز من 4 أرقام (أو اتركه فارغا)</label>
+      <input id="obPin" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+      <button class="btn btn-primary" id="obFinish" style="width:100%;justify-content:center;margin-top:1rem">🚀 ابدأ حصني</button>
+      <button class="btn btn-ghost" id="obSkip" style="width:100%;justify-content:center">تخطي كل شيء</button>
+    </div>
+  </div>
+</div>
+
+<div id="lockScreen" role="alertdialog" aria-modal="true" aria-label="قفل التطبيق">
+  <div class="box">
+    <div style="font-size:3rem">🛡️</div><h2>حصن مقفل</h2>
+    <p class="desc" id="lockHint">أدخل رمز PIN للدخول</p>
+    <div class="pin-dots" id="pinDots"><i></i><i></i><i></i><i></i></div>
+    <div class="pin-pad" id="pinPad"><button>1</button><button>2</button><button>3</button><button>4</button><button>5</button><button>6</button><button>7</button><button>8</button><button>9</button><button data-k="clear">⌫</button><button>0</button><button data-k="ok">✔</button></div>
+    <div id="firstPinBox" hidden>
+      <label class="lbl" for="newPin">عيّن رمز PIN (4 أرقام)</label>
+      <input id="newPin" inputmode="numeric" maxlength="4" placeholder="مثال: 2580" autocomplete="off">
+      <button class="btn btn-primary" id="savePin" style="margin-top:.6rem;width:100%;justify-content:center">🔒 تعيين</button>
+      <button class="btn btn-ghost" id="skipPin" style="margin-top:.4rem;width:100%;justify-content:center">تخطي</button>
+    </div>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><div class="brand-mark">🛡️</div><div>حصن<small>دون إنترنت • خصوصية كاملة</small></div></div>
+    <div class="top-actions">
+      <button class="btn btn-sos" id="sosBtn">🆘 طوارئ</button>
+      <button class="btn btn-ghost" id="themeBtn">🌙</button>
+      <button class="btn btn-primary" id="installBtn" hidden>⬇️ تثبيت</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="dash">
+    <div class="card ring-card">
+      <svg class="ring" viewBox="0 0 120 120" aria-label="حلقة السلسلة">
+        <circle class="bg" cx="60" cy="60" r="52" fill="none" stroke-width="11"/>
+        <circle class="fg" id="ringFg" cx="60" cy="60" r="52" fill="none" stroke-width="11" stroke-dasharray="326.7" stroke-dashoffset="326.7" transform="rotate(-90 60 60)"/>
+        <text x="60" y="58" text-anchor="middle" class="ring-num" id="ringNum" fill="currentColor" font-size="26" font-weight="800">0</text>
+        <text x="60" y="78" text-anchor="middle" fill="currentColor" font-size="11" opacity=".65">أيام نظيفة</text>
+      </svg>
+      <div style="flex:1">
+        <div id="greet" style="font-weight:800;font-size:1.1rem">أهلا بك 👋</div>
+        <div class="desc" id="hijriDate" style="color:var(--muted);font-size:.85rem"></div>
+        <div class="lvl">🏅 <span id="levelName">بداية الغيث</span></div>
+        <div class="xpbar"><i id="xpBar"></i></div>
+        <div class="desc" id="xpText" style="color:var(--muted);font-size:.82rem"></div>
+        <div class="quick">
+          <button class="btn btn-primary" id="quickClean">✅ يوم نظيف</button>
+          <button class="btn" id="quickFocus">🔒 تركيز 25</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>⚔️ معركتك اليوم</h2>
+      <p class="desc" id="battleLine">سجّل عاداتك، واكتب مزاجك، واختر تحديا — كل فعل يقوّي درعك.</p>
+      <div class="badges" id="badgeRow"></div>
+      <label class="lbl">تحدي الأيام</label>
+      <div class="row"><select id="challengeSel" class="inline"><option value="7">⚔️ تحدي 7 أيام</option><option value="30">🛡️ تحدي 30 يوما</option><option value="90">👑 تحدي 90 يوما</option></select>
+      <button class="btn" id="startChallenge">بدء التحدي</button></div>
+      <div class="chal-bar" style="margin-top:.6rem"><i id="challengeBar"></i></div>
+      <p class="desc" id="challengeText" style="margin-top:.4rem"></p>
+      <div class="verse"><b>﴿ آية اليوم ﴾</b> <span id="verseText"></span></div>
+    </div>
+  </section>
+
+  <div class="install-card" id="installCard">
+    📲 <b>ثبّته كتطبيق:</b> من Chrome ← ⋮ ← <b>تثبيت التطبيق</b> — يعمل بأيقونة مستقلة ودون إنترنت.
+    <button class="btn btn-primary" id="installBtn2" style="margin-inline-start:.5rem">⬇️ تثبيت</button>
+  </div>
+
+  <div class="notice" role="note"><strong>⚠️ صدق تقني</strong>المتصفح لا يحجب التطبيقات الأخرى. الحجب الحقيقي = <b>DNS العائلة</b> + مؤقتات الرفاهية الرقمية (قسم الحماية). هذا التطبيق غرفة قيادتك.</div>
+  <div id="nightBanner" class="notice" hidden style="border-inline-start-color:var(--danger);background:var(--danger-soft)"><strong>⛔ حجب نشط الآن</strong><span id="nightText"></span><div style="margin-top:.5rem"><button class="btn btn-danger" id="nightFocus">🔒 تركيز فوري</button></div></div>
+
+  <div class="grid grid-2">
+    <section class="card" id="day" aria-labelledby="h-day">
+      <h2 id="h-day">📓 يومي: مزاج + مذكرة + عادات</h2>
+      <label class="lbl">كيف تشعر الآن؟</label>
+      <div class="mood-row" id="moodRow">
+        <button data-mood="😞">😞</button><button data-mood="😐">😐</button><button data-mood="🙂">🙂</button><button data-mood="😄">😄</button><button data-mood="🔥">🔥</button>
+      </div>
+      <label class="lbl" for="diaryText">سطر واحد لنفسك (يُحفظ بتاريخ اليوم)</label>
+      <textarea id="diaryText" rows="2" placeholder="مثال: قاومت مقطعا مقترحا وأغلقت الهاتف ونمت…"></textarea>
+      <div class="row" style="margin-top:.5rem"><button class="btn btn-primary" id="saveDay">💾 حفظ اليوم</button></div>
+      <h3>⭐ عادات الدرع (كل عادة = نقاط XP)</h3>
+      <div id="habitList"></div>
+      <div class="progress" style="margin-top:.6rem"><i id="habitBar"></i></div>
+      <p class="desc" id="habitText"></p>
+    </section>
+
+    <section class="card" id="focus" aria-labelledby="h-focus">
+      <h2 id="h-focus">🔒 التركيز</h2>
+      <div class="preset-row"><button class="btn" data-preset="25">🍅 25</button><button class="btn" data-preset="50">📚 50</button><button class="btn" data-preset="90">🎯 90</button><button class="btn" data-preset="480">🌙 نوم</button></div>
+      <div class="row"><div><label class="lbl" for="focusMin">المدة (دقيقة)</label><input id="focusMin" type="number" min="1" max="480" value="25"></div>
+      <div><label class="lbl" for="lockPass">كلمة فك مبكر</label><input id="lockPass" type="password" placeholder="اختياري" autocomplete="off"></div></div>
+      <div style="margin-top:.8rem"><button class="btn btn-primary" id="startFocus">▶️ بدء القفل</button></div>
+      <div class="timer-big" id="focusPreview">25:00</div>
+      <div class="progress"><i id="dayProgress"></i></div>
+      <p class="desc" id="activeRuleNow" style="margin-top:.5rem"></p>
+      <p class="desc">⏱️ مجموعك: <b id="focusTotal">0</b> د • كسر: <b id="breakCount">0</b></p>
+    </section>
+  </div>
+
+  <div class="grid grid-2">
+    <section class="card" id="schedules"><h2>⏰ جدولة المنع</h2>
+      <label class="lbl" for="appName">التطبيق أو الموقع</label>
+      <input id="appName" placeholder="TikTok / YouTube / Instagram" autocomplete="off">
+      <div class="row"><div><label class="lbl" for="fromT">من</label><input id="fromT" type="time" value="22:00"></div>
+      <div><label class="lbl" for="toT">إلى</label><input id="toT" type="time" value="06:00"></div></div>
+      <label class="lbl" for="days">الأيام</label>
+      <select id="days"><option value="daily">يوميا</option><option value="weekdays">أيام العمل</option><option value="weekend">العطلة</option></select>
+      <div style="margin-top:.8rem"><button class="btn btn-primary" id="addRule">＋ إضافة</button></div>
+      <div id="rulesList" style="margin-top:.8rem" aria-live="polite"></div>
+    </section>
+    <section class="card" id="safe"><h2>🧭 فاحص الروابط والنصوص</h2>
+      <label class="lbl" for="urlInput">الرابط</label><input id="urlInput" dir="ltr" placeholder="https://…" autocomplete="off" spellcheck="false">
+      <label class="lbl" for="txtInput">أو نص</label><textarea id="txtInput" rows="2" placeholder="الصق نص المنشور…"></textarea>
+      <div style="margin-top:.7rem" class="row"><button class="btn btn-primary" id="checkUrl">🔍 فحص</button><button class="btn" id="openSafe">بحث آمن</button></div>
+      <p id="urlResult" class="desc" aria-live="polite" style="margin-top:.6rem"></p>
+      <label class="lbl" for="customWords">كلماتك المحفزة</label><textarea id="customWords" rows="2"></textarea>
+      <button class="btn" id="saveWords" style="margin-top:.5rem">💾 حفظ</button>
+    </section>
+  </div>
+
+  <div class="grid grid-2">
+    <section class="card" id="streak"><h2>🌱 العفة</h2>
+      <div class="streak" id="streakDays"></div>
+      <div class="row"><button class="btn btn-primary" id="markClean">✅ يوم نظيف</button><button class="btn" id="markBad">📝 تعثرت</button></div>
+      <p class="desc" id="streakText" style="margin-top:.5rem"></p>
+      <h3>خريطة 90 يوما</h3><div class="heat" id="heatMap"></div>
+      <h3>📓 السجل</h3><div class="shield-log" id="logBox"></div>
+      <div class="row" style="margin-top:.5rem"><button class="btn btn-ghost" id="exportLog">📤 نسخ لشخص ثقة</button></div>
+    </section>
+    <section class="card" id="triggers"><h2>🔥 المحفزات</h2>
+      <div class="row"><div><label class="lbl" for="trWhere">أين؟</label><select id="trWhere"><option>وحدي في الغرفة</option><option>في السرير ليلا</option><option>أتصفح الهاتف</option><option>خارج المنزل</option><option>أخرى</option></select></div>
+      <div><label class="lbl" for="trFeel">الشعور؟</label><select id="trFeel"><option>ملل</option><option>توتر/ضغط</option><option>حزن/وحدة</option><option>فضول</option><option>أرق</option></select></div></div>
+      <label class="lbl" for="trTrig">المحفز؟</label>
+      <select id="trTrig"><option>مقطع مقترح</option><option>صورة/إعلان</option><option>فراغ + هاتف</option><option>سهر وحيدا</option><option>خيال</option></select>
+      <div class="row" style="margin-top:.7rem"><button class="btn btn-primary" id="saveTrig">💾 قاومت ✅</button><button class="btn" id="saveTrigFail">سقطت 📝</button></div>
+      <p class="desc" id="trigInsight" style="margin-top:.5rem"></p>
+      <h3>📿 مسبحة الاستغفار</h3>
+      <div class="tasbih-big" id="tasbihCount">0</div>
+      <div class="row"><select id="tasbihTarget" class="inline"><option value="33">33</option><option value="100" selected>100</option><option value="1000">1000</option></select>
+      <button class="btn" id="tasbihReset">↩️ تصفير</button></div>
+      <button id="tasbihTap" style="margin-top:.5rem">📿 اضغط للاستغفار</button>
+      <p class="desc">مجموع استغفاراتك: <b id="tasbihTotal">0</b></p>
+    </section>
+  </div>
+
+  <section class="card" id="report" style="margin-top:1rem"><h2>📊 التقرير</h2>
+    <div class="stat-grid"><div class="stat"><b id="stClean">0%</b><span>نظافة 30 يوم</span></div><div class="stat"><b id="stFocus">0</b><span>دقائق تركيز</span></div><div class="stat"><b id="stBest">0</b><span>أطول سلسلة</span></div><div class="stat"><b id="stHabit">0%</b><span>العادات</span></div></div>
+    <canvas class="chart" id="chart" width="640" height="180"></canvas>
+    <p class="desc" id="reportText" style="margin-top:.5rem"></p>
+    <div class="row" style="margin-top:.5rem"><button class="btn" id="copyReport">📋 نسخ</button><button class="btn" id="dlBackup">💾 احتياطية</button><label class="btn" for="upBackup" style="cursor:pointer">📥 استعادة<input id="upBackup" type="file" accept="application/json" hidden></label></div>
+  </section>
+
+  <section class="card" id="dns" style="margin-top:1rem"><h2>🛡️ التفعيل الحقيقي (مرة واحدة)</h2>
+    <ol class="steps"><li><b>DNS العائلة:</b> <span class="kbd">الإعدادات ← DNS الخاص</span> ← <span class="kbd" dir="ltr">family.adguard-dns.com</span></li>
+    <li><b>الرفاهية الرقمية:</b> مؤقت 30 دقيقة + وضع النوم 22:00–06:00.</li>
+    <li><b>متجر Play:</b> الرقابة الأبوية برقم يعرفه شخص ثقة.</li><li><b>التثبيت:</b> Chrome ← ⋮ ← تثبيت التطبيق.</li></ol>
+  </section>
+
+  <section class="card" id="settings" style="margin-top:1rem"><h2>⚙️ الإعدادات</h2>
+    <div class="row"><div><label class="lbl" for="setPin">PIN جديد (فارغ = إلغاء)</label><input id="setPin" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+    <div><label class="lbl" for="setName">اسمك</label><input id="setName" autocomplete="off"></div></div>
+    <div class="row" style="margin-top:.6rem"><button class="btn" id="saveSetPin">حفظ PIN</button><button class="btn" id="saveName">حفظ الاسم</button><button class="btn" id="toggleVib">📳 اهتزاز</button><button class="btn" id="toggleSound">🔔 صوت</button><button class="btn" id="autoThemeBtn">🌗 تلقائي</button></div>
+    <div class="row" style="margin-top:.6rem"><button class="btn btn-danger" id="wipeAll">🗑️ مسح كل بياناتي</button></div>
+  </section>
+
+  <section class="card" id="deploy" style="margin-top:1rem"><h2>🌐 النشر الدائم</h2>
+  <p class="desc">اسحب <span class="kbd" dir="ltr">hasin-shield</span> إلى Netlify Drop / Cloudflare Pages / Vercel → رابط <span class="kbd" dir="ltr">https://…</span> دائم.</p></section>
+</main>
+
+<nav class="tabbar"><div class="tabbar-inner">
+  <a href="#day"><span class="i">📓</span>يومي</a><a href="#focus"><span class="i">🔒</span>تركيز</a><a href="#safe"><span class="i">🧭</span>فحص</a><a href="#triggers"><span class="i">🔥</span>محفزات</a><a href="#report"><span class="i">📊</span>تقرير</a><a href="#settings"><span class="i">⚙️</span>إعدادات</a>
+</div></nav>
+
+<div id="focusOverlay" role="alertdialog" aria-modal="true"><div class="box"><div style="font-size:3rem">🛡️</div><h2>الحصن مفعّل</h2><p id="focusMsg"></p><div class="t" id="focusTimer">25:00</div><div class="progress" style="background:rgba(255,255,255,.15)"><i id="focusBar"></i></div><div style="margin-top:1.2rem"><button class="btn" id="exitFocus" style="color:#fff;border-color:#fff;background:transparent">إنهاء (يُسجل)</button></div></div></div>
+<div id="sosOverlay" role="alertdialog" aria-modal="true"><div class="box"><div style="font-size:3rem">🆘</div><h2>اثبت — الموجة تمر</h2><p>تنفس مع الدائرة. ذروتها 5 دقائق ثم تخفت.</p><div id="breathCircle">شهيق…</div>
+<ol class="sos-steps"><li>🧊 توضأ بماء بارد.</li><li>🚶 غيّر الغرفة ولا تبقَ وحدك مع الهاتف.</li><li>📿 استغفر 33 مرة.</li><li>📖 اقرأ آية الكرسي بصوت مسموع.</li><li>⏰ ثم ادخل تركيز 25 دقيقة.</li></ol>
+<div class="t" id="sosTimer" style="font-size:2.2rem;font-weight:800">05:00</div>
+<div class="row" style="margin-top:.8rem"><button class="btn btn-primary" id="sosWin">✅ نجوت</button><button class="btn" id="sosClose" style="color:#fff;border-color:#fff;background:transparent">إغلاق</button></div></div></div>
+
+<canvas id="confetti"></canvas>
+<div id="toast"><span id="toastText"></span></div>
+<footer>حصن v3 — صُنع للعفة • بياناتك جهازك فقط • <span id="ver"></span></footer>
+<script src="./app.js"></script>
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}</script>
+</body>
+</html>

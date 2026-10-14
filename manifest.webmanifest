@@ -1,0 +1,24 @@
+{
+  "name": "حصن — درع العفة والتركيز",
+  "short_name": "حصن",
+  "description": "مركز ضبط ذاتي شخصي: قفل PIN، جدولة الحجب، تركيز، طوارئ، محفزات، عادات، تقارير.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#0E7C6B",
+  "categories": ["lifestyle", "productivity", "utilities"],
+  "shortcuts": [
+    { "name": "🆘 طوارئ", "url": "./index.html#focus" },
+    { "name": "🔒 تركيز", "url": "./index.html#focus" },
+    { "name": "📊 التقرير", "url": "./index.html#report" }
+  ],
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
