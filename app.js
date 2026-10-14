@@ -29,7 +29,18 @@ function tone(f,t0,dur,type,att){if(!soundOn())return;att=att||0;
   g.gain.exponentialRampToValueAtTime(0.08,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
   o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+dur+0.05)}catch(e){}}
 function soundOn(){return store.get("sound",true)!==false}
-function beep(f,d){if(!soundOn())return;tone(f||660,0,d||0.15)}
+/* نقرة لمس ناعمة (بدل الصفير الحاد) + زر كتمها */
+function touchOn(){return store.get("touch",true)!==false}
+function tap(){if(!soundOn()||!touchOn())return;
+  try{var ac=ensureAC();if(!ac||ac.state!=="running")return;
+  var o=ac.createOscillator(),g=ac.createGain();o.type="sine";o.frequency.value=480;
+  var t=ac.currentTime;g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(0.025,t+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.07);
+  o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+0.1)}catch(e){}}
+function paintTouch(){try{$("touchBtn").textContent=touchOn()?"👆 لمس: ناعم":"👆 لمس: صامت"}catch(e){}}
+if($("touchBtn"))$("touchBtn").onclick=function(){store.set("touch",!touchOn());paintTouch();tap()};
+paintTouch();
 function melody(kind){if(!soundOn())return;
   if(kind==="win"){tone(523,0,.14);tone(659,.13,.14);tone(784,.26,.24)}
   else if(kind==="badge"){tone(880,0,.18);tone(1174,.15,.28)}
@@ -38,7 +49,7 @@ function melody(kind){if(!soundOn())return;
   else if(kind==="alarm"){tone(440,0,.2,"triangle");tone(440,.3,.2,"triangle")}}
 ["pointerdown","keydown","touchstart"].forEach(function(ev){addEventListener(ev,function(){ensureAC()},{once:true,passive:true})});
 function paintSound(){$("toggleSound").textContent=soundOn()?"🔔 صوت: يعمل":"🔕 صوت: متوقف"}
-$("toggleSound").onclick=function(){store.set("sound",!soundOn());paintSound();if(soundOn())melody("tick");else{ambStop();toast("🔕 الصوت متوقف")}};
+$("toggleSound").onclick=function(){store.set("sound",!soundOn());paintSound();if(soundOn())tap();else{ambStop();toast("🔕 الصوت متوقف")}};
 paintSound();
 if($("sndTest"))$("sndTest").onclick=function(){melody("win");vib(60);toast(soundOn()?"🔊 الصوت يعمل":"🔕 فعّل الصوت أولا")};
 
@@ -201,7 +212,7 @@ $("pinPad").addEventListener("click",function(e){
   if(k==="clear")pinBuf=pinBuf.slice(0,-1);
   else if(k==="ok"){if(hash(pinBuf)===pinHash){pinBuf="";$("lockScreen").classList.remove("open");log("🔓 فُتح التطبيق")}else{pinBuf="";vib([80,40,80]);melody("bad");$("lockHint").textContent="رمز خاطئ";log("⚠️ رمز خاطئ")}}
   else if(pinBuf.length<4){pinBuf+=b.textContent.trim();
-    if(pinBuf.length===4){if(hash(pinBuf)===pinHash){pinBuf="";$("lockScreen").classList.remove("open");log("🔓 فُتح التطبيق");melody("tick")}
+    if(pinBuf.length===4){if(hash(pinBuf)===pinHash){pinBuf="";$("lockScreen").classList.remove("open");log("🔓 فُتح التطبيق");tap()}
       else{var bad=store.get("badPin",0)+1;store.set("badPin",bad);pinBuf="";vib([80,40,80]);melody("bad");$("lockHint").textContent="رمز خاطئ ("+bad+")";log("⚠️ رمز خاطئ #"+bad)}}}
   paintPin()});
 $("savePin").onclick=function(){var v=$("newPin").value.trim();if(!/^\d{4}$/.test(v)){toast("4 أرقام بالضبط");return}
@@ -250,7 +261,7 @@ $("nightFocus").onclick=function(){$("focusMin").value=25;$("focusMin").oninput(
 
 /* التركيز */
 var fInt=null,fEnd=0,fTotal=1;
-document.querySelectorAll("[data-preset]").forEach(function(b){b.onclick=function(){$("focusMin").value=b.getAttribute("data-preset");$("focusMin").oninput();melody("tick")}});
+document.querySelectorAll("[data-preset]").forEach(function(b){b.onclick=function(){$("focusMin").value=b.getAttribute("data-preset");$("focusMin").oninput();tap()}});
 $("focusMin").oninput=function(){$("focusPreview").textContent=String($("focusMin").value||25).padStart(2,"0")+":00"};
 $("focusMin").oninput();
 function focusStats(){$("focusTotal").textContent=store.get("focusMin",0);$("breakCount").textContent=store.get("breaks",0)}
@@ -293,8 +304,8 @@ $("checkUrl").onclick=function(){var src=($("urlInput").value+" "+$("txtInput").
   if(!src){toast("الصق شيئا أولا");return}
   var r=scan(src),box=$("urlResult");
   if(r.lv===2){box.textContent="⛔ ممنوع. "+r.t;box.style.color="var(--danger)";log("⛔ مُنع محتوى");vib([100,50,100]);melody("bad")}
-  else if(r.lv===1){box.textContent="⚠️ مشبوه. "+r.t;box.style.color="var(--warn)";melody("tick")}
-  else{box.textContent="✅ سليم ظاهريا. "+r.t;box.style.color="var(--accent)";melody("tick")}};
+  else if(r.lv===1){box.textContent="⚠️ مشبوه. "+r.t;box.style.color="var(--warn)";tap()}
+  else{box.textContent="✅ سليم ظاهريا. "+r.t;box.style.color="var(--accent)";tap()}};
 $("openSafe").onclick=function(){var u=$("urlInput").value.trim();
   if(u&&scan(u).lv===2){toast("ممنوع حماية لك");return}
   open("https://search.brave.com/search?q="+encodeURIComponent(u||"")+"&safesearch=strict","_blank")};
@@ -354,7 +365,7 @@ function renderHabits(){var today=dayK(),done=store.get("hab_"+today,[]);
     var d=document.createElement("label");d.className="habit"+(on?" done":"");
     var c=document.createElement("input");c.type="checkbox";c.checked=on;
     c.onchange=function(){var arr=store.get("hab_"+today,[]);
-      if(c.checked&&arr.indexOf(h[0])<0){arr.push(h[0]);award("hab_"+h[0],h[2],1);melody("tick")}
+      if(c.checked&&arr.indexOf(h[0])<0){arr.push(h[0]);award("hab_"+h[0],h[2],1);tap()}
       if(!c.checked)arr=arr.filter(function(x){return x!==h[0]});
       store.set("hab_"+today,arr);renderHabits();drawReport()};
     var t=document.createElement("span");t.textContent=h[1];
@@ -366,7 +377,7 @@ renderHabits();
 function todayMood(){return store.get("mood_"+dayK(),null)}
 function paintMood(){var m=todayMood();document.querySelectorAll("#moodRow button").forEach(function(b){b.classList.toggle("sel",b.getAttribute("data-mood")===m)})}
 paintMood();
-document.querySelectorAll("#moodRow button").forEach(function(b){b.onclick=function(){store.set("mood_"+dayK(),b.getAttribute("data-mood"));paintMood();melody("tick")}});
+document.querySelectorAll("#moodRow button").forEach(function(b){b.onclick=function(){store.set("mood_"+dayK(),b.getAttribute("data-mood"));paintMood();tap()}});
 $("diaryText").value=store.get("diary_"+dayK(),"");
 $("saveDay").onclick=function(){var k=dayK();
   store.set("diary_"+k,$("diaryText").value.trim());
@@ -399,7 +410,7 @@ var tasbih=0;
 function renderTas(){$("tasbihCount").textContent=tasbih;$("tasbihTotal").textContent=store.get("tasbihTotal",0)}
 renderTas();
 $("tasbihTap").onclick=function(){tasbih++;store.set("tasbihTotal",store.get("tasbihTotal",0)+1);
-  var tgt=+($("tasbihTarget").value);vib(15);if(tasbih%10===0)melody("tick");
+  var tgt=+($("tasbihTarget").value);vib(15);if(tasbih%10===0)tap();
   if(tasbih>=tgt){var g=award("tasbih",10,10);tasbih=0;celebrate();checkBadges();
     toast(g>0?("تقبل الله! أتممت "+tgt+" 📿 +10 XP"):("تقبل الله! أتممت "+tgt+" 📿"))}
   renderTas()};
