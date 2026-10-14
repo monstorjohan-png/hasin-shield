@@ -159,3 +159,42 @@ canvas.chart{width:100%;height:180px;background:var(--surface);border:1px solid 
 #confetti{position:fixed;inset:0;z-index:240;pointer-events:none;display:none}
 .install-card{border:1px dashed var(--accent);background:var(--accent-soft);border-radius:var(--r-lg);padding:1rem 1.2rem;margin-top:1rem}
 select.inline{width:auto;display:inline-block}
+/* ===== تنسيق الهاتف (375px أولا) ===== */
+html{-webkit-text-size-adjust:100%}
+body{overflow-x:hidden}
+img,svg,canvas{max-width:100%}
+button,a{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.btn,input,select,textarea{font-size:1rem;min-height:44px} /* يمنع زوم الهاتف */
+canvas.chart{height:auto} /* يحافظ على نسبة الرسم */
+#focusOverlay,#sosOverlay,#lockScreen,#onboard{max-height:100dvh;overflow-y:auto}
+#focusOverlay .box,#sosOverlay .box{width:100%}
+@media(max-width:640px){
+  main{padding:.8rem .8rem 7.5rem}
+  .hero{padding:1.1rem}
+  .hero h1{font-size:1.45rem}
+  .card h2{font-size:1.15rem}
+  .topbar-inner{padding:.55rem .7rem;gap:.5rem}
+  .brand{font-size:.92rem}
+  .brand-mark{width:32px;height:32px;font-size:1.1rem;border-radius:10px}
+  .brand small{font-size:.68rem}
+  .top-actions{gap:.35rem}
+  .top-actions .btn{padding:.45rem .7rem;font-size:.82rem;min-height:40px}
+  #sosBtn{font-size:.82rem}
+  .ring-card{flex-direction:column;text-align:center}
+  .ring{width:150px;height:150px}
+  .quick .btn{min-height:48px}
+  .timer-big{font-size:2.1rem}
+  #focusOverlay .t{font-size:2.6rem}
+  #focusOverlay h2{font-size:1.5rem}
+  .heat{grid-template-columns:repeat(10,1fr)}
+  .pin-pad button{min-height:58px}
+  .mood-row button{min-height:52px}
+  #tasbihTap{min-height:60px}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .tabbar-inner{grid-template-columns:repeat(6,1fr);padding:.3rem .3rem calc(.3rem + env(safe-area-inset-bottom))}
+  .tabbar a{font-size:.6rem;padding:.35rem .1rem}
+  .tabbar span.i{font-size:1.1rem}
+  .pin-pad,#moodRow,#tasbihTap{user-select:none;-webkit-user-select:none}
+  .ob-step h2{font-size:1.25rem}
+  #onboard .sheet{padding:1.2rem}
+}
